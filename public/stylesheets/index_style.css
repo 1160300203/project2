@@ -1,0 +1,35 @@
+
+body{
+  background:url("../images/cinema.jpg") top center no-repeat;
+  background-size:100%,100%;
+}
+
+#div1{
+  display:inline-block;
+  position:fixed;
+  left:45%;
+  top:20%;
+  text-align:center;
+}
+
+h1{
+  text-align: center;
+  color: indianred;
+}
+
+#username, #password{
+  height:25px;
+  font-family:sans-serif;
+}
+
+input[type='submit']{
+  width:200px;
+  height:20px;
+  background-color:darkturquoise;
+}
+input[type='button']{
+  text-align:center;
+  width:200px;
+  height:20px;
+  background-color:darkkhaki;
+}

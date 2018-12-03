@@ -1,0 +1,13 @@
+
+body{
+  background:url("../images/cinema.jpg") top center no-repeat;
+  background-size:100%,100%;
+}
+
+form{
+  display:inline-block;
+  position:fixed;
+  left:43%;
+  top:27%;
+  text-align:center;
+}

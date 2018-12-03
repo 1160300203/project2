@@ -2,15 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="stylesheets/main_style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <title>Title</title>
 </head>
 <body>
-    <div>
+    <div id="nav">
         <span id='buywelcome'> Buy A Ticket </span>
-        <span href='/comment'> Movie Review </span>
-        <span href='/history'> Purchase History </span>
-        <span id="logout"> Logout </span>
+        <div id="last3">
+            <span id="logout" class="navlast3"> Logout </span>
+            <span id='history' class="navlast3"> Purchase History </span>
+            <span id='comment' class="navlast3"> Movie Review </span>
+        </div>
     </div>
     <div id="movieslist">
 
@@ -30,7 +32,7 @@
             });
         });
 
-        $("#buywelcome").click(function () {
+        var buywelcome_callback = function () {
             $.ajax({
                 url: "/buywelcome",
                 type: 'GET',
@@ -40,16 +42,14 @@
                     var movieslists = "";
                     for(var i=0; i<movies.length; i++){
                         var movie = movies[i];
-
-                        movieslists += "<h1>" + movie.FilmName + "</h1>";
+                        movieslists += "<h1 class='filmName'>" + movie.FilmName + "</h1>";
                         movieslists += "<p><img src='images/" + movie.Poster + "'></p>";
-                        movieslists += "<h3>Synopsis: " + movie.Description + "</h3>";
+                        movieslists += "<h3 class='synopsis'>Synopsis: " + movie.Description + "</h3>";
                         movieslists += "<h4>Director: " + movie.Director + "</h4>";
                         movieslists += "<h4>Duration: " + movie.Duration + "</h4>";
                         movieslists += "<h4>Category: " + movie.Category + "</h4>";
                         movieslists += "<h4>Language: " + movie.Language + "</h4>";
                         movieslists += "<form class='broadCastForms'><select name='BroadCastId'>";
-
                         var broadCasts = movie.broadCasts;
                         for(var j=0; j<broadCasts.length; j++){
                             var broadCast = broadCasts[j];
@@ -61,9 +61,11 @@
                     $("#movieslist").html(movieslists);
                 }
             })
-        });
+        };
 
-        $("#movieslist").on("submit",".broadCastForms", function () {
+        $("body").on("click", "#buywelcome", buywelcome_callback);
+
+        $("body").on("submit",".broadCastForms", function () {
             event.preventDefault();
             $.ajax({
                 url: "/seatplantry",
@@ -80,15 +82,16 @@
                         "<tr><td>Film: </td><td>" + film.FilmName + "</td></tr>" +
                         "<tr><td>Category: </td><td>" + film.Category + "</td></tr>" +
                         "<tr><td>Show Time: </td><td>" + broadCast.Time + "</td></tr></table>" +
+                        "<div id='SeatsFormDiv'>" +
                         "<form id='SeatsForm'>" +
-                        "<input type='hidden' name='BroadCast' value='"+ broadCast +"'>" +
-                        "<input type='hidden' name='Film' value='" + film + "'>" +
+                        "<input type='hidden' name='BroadCast' value='"+ JSON.stringify(broadCast) +"'>" +
+                        "<input type='hidden' name='Film' value='" + JSON.stringify(film) + "'>" +
                         "<table id='seat'>";
                     for(var i=house.HouseRow; i>0; i--){
                         ticketInfo += "<tr class='seatRow'>";
                         for(var j=house.HouseCol; j>0; j--){
                             var seatNo = String.fromCharCode(i+'A'.charCodeAt(0)-1) + j;
-                            if(seatNo in seats){
+                            if(seats.indexOf(seatNo) !== -1){
                                 ticketInfo += "<td class='seatCellSold'> Sold <br>" + seatNo;
                             }else{
                                 ticketInfo += "<td class='seatCell'>" +
@@ -99,27 +102,28 @@
                         ticketInfo += "</tr>";
                     }
                     ticketInfo += "<tr id='screen'><td colspan=" + house.HouseCol +"SCREEN</td></tr>" +
-                        "</table><input type='hidden' name='BroadCastId' value=" + broadCast._id +">" +
+                        "</table>" +
                         "<div><input type='submit' value='Submit'>" +
-                        "<input type='button' onclick=\"location.href='/buywelcome'\" value='Cancel'></div>" +
-                        "</form>";
+                        "<input type='button' onclick=\"return buywelcome_callback()\" value='Cancel'></div>" +
+                        "</form></div>";
                     $("#movieslist").html(ticketInfo);
                 }
             });
         });
 
-        $("#movieslist").on("submit", "#SeatsForm", function () {
+        $("body").on("submit", "#SeatsForm", function () {
             event.preventDefault();
             var data = $(this).serializeArray();
-            var seatNo = data.seatNo;
+            var broadCast = data[0].value, film = data[1].value;
 
-            console.log(data);
-
-            console.log(seatNo);
-
+            var seatNo = $("input[name='seatNo[]']:checked").map(function () {
+                return $(this).val();
+            });
             $("#Ticketing").text("Cart");
             var seatInfo = "<form id='SeatsTypeForm'>"+
-                "<input type='hidden' name='data' value='" + data + "'>";
+                "<input type='hidden' name='broadCast' value='" + broadCast + "'>" +
+                "<input type='hidden' name='film' value='" + film + "'>" +
+                "<input type='hidden' name='seatNo' value='" + JSON.stringify(seatNo) + "'>";
             for(var i=0; i<seatNo.length; i++){
                 seatInfo += "<p>" + seatNo[i] + "<select name='TicketType[]'>" +
                         "<option value='Adult' selected='selected'>Adult($75)</option>" +
@@ -127,15 +131,81 @@
                         "</select></p>";
             }
             seatInfo += "<div><input type='submit' value='Confirm'>" +
-                "<input type='button' value='Cancel' onclick=\"location.href='/buywelcome'\"></div>";
-            $("#SeatsForm").html(seatInfo);
+                "<input type='button' value='Cancel' onclick=\"return buywelcome_callback()\"></div></form>";
+            $("#SeatsFormDiv").html(seatInfo);
         });
 
-        $("#movieslist").on("submit", "#SeatsTypeForm", function () {
-
+        $("body").on("submit", "#SeatsTypeForm", function (event) {
+            event.preventDefault();
+            var data = $(this).serializeArray();
+            var broadCast = JSON.parse(data[0].value);
+            var film = JSON.parse(data[1].value), seatNo = JSON.parse(data[2].value);
+            var ticketType = $("select[name='TicketType[]']").map(function () {
+                return $(this).val();
+            });
+            var orderStr = "<h1>Order information</h1>" +
+                "<form id='orderInfoForm'>" +
+                "<input type='hidden' name='SeatNo' value='" + JSON.stringify(seatNo) + "'>" +
+                "<input type='hidden' name='BroadCastId' value='" + JSON.stringify(broadCast._id)  + "'>" +
+                "<input type='hidden' name='TicketType' value='" + JSON.stringify(ticketType) + "'>" +
+                "<table>";
+            var fee = 0;
+            var ticketsFee = [];
+            for(var i=0; i<seatNo.length; i++){
+                orderStr += "<tr><td>Cinema: </td><td>US Cinema</td></tr>" +
+                    "<tr><td>House: </td><td>" + broadCast.HouseId +"</td></tr>" +
+                    "<tr><td>SeatNo: </td><td>" + seatNo[i] + "</td></tr>" +
+                    "<tr><td>Film: </td><td>" + film.FilmName + "</td></tr>" +
+                    "<tr><td>Category: </td><td>" + film.Category + "</td></tr>" +
+                    "<tr><td>Show Time: </td><td>" + broadCast.Time + "</td></tr>";
+                var ticketFee = "";
+                if(ticketType[i] === "Adult"){
+                    ticketFee = "$75(" + ticketType[i] + ")";
+                    fee += 75;
+                    ticketsFee.push(75);
+                }else{
+                    ticketFee = "$50(" + ticketType[i] + ")";
+                    fee += 50;
+                    ticketsFee.push(50);
+                }
+                orderStr += "<tr><td>Ticket Fee: </td><td>" + ticketFee + "</td></tr>";
+            }
+            orderStr += "</table>" +
+                "<p>Total Fee: $ " + fee + "</p>" +
+                "<hr><input type='hidden' name='TicketsFee' value='" + JSON.stringify(ticketsFee) + "'>" +
+                "<p>Please present valid proof of age/status when purchasing Student or Senior tickets before entering the cinema house.</p>" +
+                "<input type='submit' value='OK'><input type='hidden' name='Fee' value="+fee+"></form>";
+            $("#movieslist").html(orderStr);
         });
 
-        $("#logout").click(function () {
+        $("body").on("submit", "#orderInfoForm", function (event) {
+            event.preventDefault();
+
+            var data = $(this).serializeArray();
+            var seatNo = data[0].value;
+            var broadCastId = data[1].value;
+            var ticketType = data[2].value;
+            var ticketsFee = data[3].value;
+            $.ajax({
+                url: "/confirm",
+                type: "POST",
+                data: {
+                    SeatNo: seatNo,
+                    BroadCastId: broadCastId,
+                    TicketType: ticketType,
+                    TicketsFee: ticketsFee
+                }
+            }).done(function (response) {
+                if(response.msg === ""){
+                    buywelcome_callback();
+                }else{
+                    alert(response.msg);
+                    buywelcome_callback();
+                }
+            });
+        });
+
+        $("body").on("click", "#logout", function () {
             $.ajax({
                 url: "/logout",
                 type: 'GET'
@@ -154,6 +224,120 @@
             });
         });
 
+        var comment_callback = function () {
+            $.ajax({
+                url: "/comment",
+                type: "GET"
+            }).done((response)=>{
+                if(response.msg === ""){
+                    var commentInfo = "<div>" +
+                        "<span id='buywelcome'> Buy A Ticket </span>" +
+                        "<span id='comment'> Movie Review </span>" +
+                        "<span id='history'> Purchase History </span>" +
+                        "<span id='logout'> Logout </span>" +
+                        "</div><div id='movieslist'><form id='FilmNameForm'>" +
+                        "<p>Film Name:<select name='FilmId'>";
+                    var filmNames = response.filmNames;
+                    var filmIds = response.filmIds;
+                    for(var i=0; i<filmNames.length; i++){
+                        commentInfo += "<option value='" + filmIds[i] + "'>" +
+                            filmNames[i] + "</option>";
+                    }
+                    commentInfo += "</select></p>" +
+                        "<textarea name='Comment' cols='80' rows='20' placeholder='Please input comment here' id='Comment'></textarea>" +
+                        "<br><input type='button' value='View comment' id='ViewComment'>" +
+                        "<input type='submit' value='Submit comment'>" +
+                        "<div id='OthersComments'></div>" +
+                        "</form></div>";
+                    $("body").html(commentInfo);
+                }
+            });
+        };
+        $("body").on("click", "#comment", comment_callback);
+
+        $("body").on("click", "#ViewComment", ()=>{
+
+            console.log("e1");
+
+            $.ajax({
+                url: "/comment_retrieve",
+                type: "GET",
+                data: {
+                    FilmId: $("select[name='FilmId']").val()
+                }
+            }).done((response)=>{
+                if(response.msg === ""){
+                    var viewers = response.viewers, comments = response.comments;
+                    var othersComments = "";
+                    for(var i=0; i<viewers.length; i++){
+                        othersComments += "<h2>Viewer: "+viewers[i]+"</h2><h3>Comment: " + comments[i] +"</h3>" +
+                                "<hr>";
+                    }
+                    $("#OthersComments").html(othersComments);
+                }
+            });
+        });
+
+        $("body").on("submit", "#FilmNameForm", (event)=>{
+            event.preventDefault();
+            var filmId = $("select[name='FilmId']").val();
+            var comment = $("textarea[name='Comment']").val();
+            if(validateComment()){
+                $.ajax({
+                    url: "/comment_submit",
+                    type: "POST",
+                    data: {
+                        FilmId: filmId,
+                        Comment: comment
+                    }
+                }).done((response)=>{
+                    if(response.msg === ""){
+                        $("body").html("<h1>Your comment has been submitted</h1>");
+                        window.setTimeout(comment_callback, 3000);
+                    }
+                });
+            }
+        });
+
+        function validateComment(){
+            if(document.getElementById("Comment").value==""){
+                alert("You should enter the comment before the submission.");
+                return false;
+            }
+            return true;
+        }
+
+        $("body").on("click", "#history", function(){
+            $.ajax({
+                url: "/history",
+                type: "GET"
+            }).done(function (response) {
+                if(response.msg === ""){
+                    var username = response.username;
+                    var ticketIds = response.ticketIds;
+                    var houseIds = response.houseIds;
+                    var seatNos = response.seatNos;
+                    var filmNames = response.filmNames;
+                    var languages = response.languages;
+                    var dates = response.dates;
+                    var durations = response.durations;
+                    var ticketFees = response.ticketFees;
+                    var ticketTypes = response.ticketTypes;
+                    var historyStr = "<h1>Purchase History</h1>" +
+                        "<h3>Username: " + username + "</h3>";
+                    for(var i=0; i<ticketIds.length; i++){
+                        historyStr += "<div>TicketId:" + ticketIds[i] + " $" + ticketFees[i] + "(" + ticketTypes[i] + ")</div>" +
+                            "<div>House:" + houseIds[i] + "</div>" +
+                            "<div>Seat:" + seatNos[i] + "</div>" +
+                            "<div>FilmName:" + filmNames[i] + durations[i] + "</div>" +
+                            "<div>Language:" + languages[i] + "</div>" +
+                            "<div>Date: " + dates[i] + "</div>" +
+                            "<hr>";
+                    }
+                    $("#movieslist").html(historyStr);
+                }
+            });
+        });
     </script>
 </body>
 </html>
