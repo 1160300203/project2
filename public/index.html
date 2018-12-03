@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="index_style.css">
+</head>
+<body>
+<div id="div1">
+<h1>US CINEMA</h1>
+<form id="loginForm">
+    <p><input type="text" name="username" id="username" placeholder="Username"></p>
+    <p><input type="password" name="password" id="password" placeholder="Password"></p>
+    <p><input type="submit" value="SUBMIT"></p>
+    <p><input type="button" value="Create an account" onclick="location.href='createaccount.html'"></input></p>
+</form>
+</div>
+<script>
+    $("#loginForm").submit(function (event) {
+        event.preventDefault();
+        if(validateForm()){
+            $.ajax({
+                url: "/verifyLogin",
+                type: 'POST',
+                data: $("#loginForm").serialize()
+            }).done(function (response) {
+                if(response.msg === ""){
+                    window.location.href = "main.html";
+                }else if(response.msg === "invalid"){
+                    $("body").html("<h1>Invalid login, please login again.</h1>");
+                    window.setTimeout(function () {
+                        window.location.href = "index.html";
+                    }, 3000);
+                }
+            });
+        }
+    });
+
+    function validateForm() {
+        if(document.getElementById("username").value == "" ||
+            document.getElementById("password").value == ""){
+            alert("Please do not leave the fields empty");
+            return false;
+        }
+        return true;
+    }
+
+</script>
+</body>
+</html>

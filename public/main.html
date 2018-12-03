@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <title>Title</title>
+</head>
+<body>
+    <div>
+        <span id='buywelcome'> Buy A Ticket </span>
+        <span href='/comment'> Movie Review </span>
+        <span href='/history'> Purchase History </span>
+        <span id="logout"> Logout </span>
+    </div>
+    <div id="movieslist">
+
+    </div>
+    <script>
+        $("body").ready(function () {
+            $.ajax({
+                url: "/verifyLogin",
+                type: 'POST'
+            }).done(function (response) {
+                if(response.msg !== ""){
+                    $("body").html("<h1>You have not logged in</h1>");
+                    window.setTimeout(function () {
+                        window.location.href = "index.html";
+                    }, 3000);
+                }
+            });
+        });
+
+        $("#buywelcome").click(function () {
+            $.ajax({
+                url: "/buywelcome",
+                type: 'GET',
+            }).done(function (response) {
+                if(response.msg === ""){
+                    var movies = response.movies;
+                    var movieslists = "";
+                    for(var i=0; i<movies.length; i++){
+                        var movie = movies[i];
+
+                        movieslists += "<h1>" + movie.FilmName + "</h1>";
+                        movieslists += "<p><img src='images/" + movie.Poster + "'></p>";
+                        movieslists += "<h3>Synopsis: " + movie.Description + "</h3>";
+                        movieslists += "<h4>Director: " + movie.Director + "</h4>";
+                        movieslists += "<h4>Duration: " + movie.Duration + "</h4>";
+                        movieslists += "<h4>Category: " + movie.Category + "</h4>";
+                        movieslists += "<h4>Language: " + movie.Language + "</h4>";
+                        movieslists += "<form class='broadCastForms'><select name='BroadCastId'>";
+
+                        var broadCasts = movie.broadCasts;
+                        for(var j=0; j<broadCasts.length; j++){
+                            var broadCast = broadCasts[j];
+                            movieslists += "<option value='" + broadCast._id + "'>" + broadCast.Dates+" "+broadCast.Time+" (" + broadCast.day +
+                                ") " + broadCast.HouseId+"</option>";
+                        }
+                        movieslists += "</select><input type='submit' value='Submit'></form><hr>";
+                    }
+                    $("#movieslist").html(movieslists);
+                }
+            })
+        });
+
+        $("#movieslist").on("submit",".broadCastForms", function () {
+            event.preventDefault();
+            $.ajax({
+                url: "/seatplantry",
+                type: 'GET',
+                data: $(this).serialize()
+            }).done(function (response) {
+                if(response.msg === ""){
+                    var broadCast = response.broadCast;
+                    var house = response.house;
+                    var seats = response.seats;
+                    var film = response.film;
+                    var ticketInfo = "<h1 id='Ticketing'>Ticketing</h1><table><tr><td>Cinema: </td><td>US</td></tr>" +
+                        "<tr><td>House: </td><td>" + broadCast.HouseId + "</td></tr>" +
+                        "<tr><td>Film: </td><td>" + film.FilmName + "</td></tr>" +
+                        "<tr><td>Category: </td><td>" + film.Category + "</td></tr>" +
+                        "<tr><td>Show Time: </td><td>" + broadCast.Time + "</td></tr></table>" +
+                        "<form id='SeatsForm'>" +
+                        "<input type='hidden' name='BroadCast' value='"+ broadCast +"'>" +
+                        "<input type='hidden' name='Film' value='" + film + "'>" +
+                        "<table id='seat'>";
+                    for(var i=house.HouseRow; i>0; i--){
+                        ticketInfo += "<tr class='seatRow'>";
+                        for(var j=house.HouseCol; j>0; j--){
+                            var seatNo = String.fromCharCode(i+'A'.charCodeAt(0)-1) + j;
+                            if(seatNo in seats){
+                                ticketInfo += "<td class='seatCellSold'> Sold <br>" + seatNo;
+                            }else{
+                                ticketInfo += "<td class='seatCell'>" +
+                                    "<input type='checkbox' name='seatNo[]' value=" + seatNo + "><br>" + seatNo;
+                            }
+                            ticketInfo += "</td>";
+                        }
+                        ticketInfo += "</tr>";
+                    }
+                    ticketInfo += "<tr id='screen'><td colspan=" + house.HouseCol +"SCREEN</td></tr>" +
+                        "</table><input type='hidden' name='BroadCastId' value=" + broadCast._id +">" +
+                        "<div><input type='submit' value='Submit'>" +
+                        "<input type='button' onclick=\"location.href='/buywelcome'\" value='Cancel'></div>" +
+                        "</form>";
+                    $("#movieslist").html(ticketInfo);
+                }
+            });
+        });
+
+        $("#movieslist").on("submit", "#SeatsForm", function () {
+            event.preventDefault();
+            var data = $(this).serializeArray();
+            var seatNo = data.seatNo;
+
+            console.log(data);
+
+            console.log(seatNo);
+
+            $("#Ticketing").text("Cart");
+            var seatInfo = "<form id='SeatsTypeForm'>"+
+                "<input type='hidden' name='data' value='" + data + "'>";
+            for(var i=0; i<seatNo.length; i++){
+                seatInfo += "<p>" + seatNo[i] + "<select name='TicketType[]'>" +
+                        "<option value='Adult' selected='selected'>Adult($75)</option>" +
+                        "<option value='Student/Senior'>Student/Senior($50)</option>" +
+                        "</select></p>";
+            }
+            seatInfo += "<div><input type='submit' value='Confirm'>" +
+                "<input type='button' value='Cancel' onclick=\"location.href='/buywelcome'\"></div>";
+            $("#SeatsForm").html(seatInfo);
+        });
+
+        $("#movieslist").on("submit", "#SeatsTypeForm", function () {
+
+        });
+
+        $("#logout").click(function () {
+            $.ajax({
+                url: "/logout",
+                type: 'GET'
+            }).done(function (response) {
+                if(response.msg === ""){
+                    $("body").html("<h2>Logging out</h2>");
+                    window.setTimeout(function () {
+                        window.location.href = "index.html";
+                    }, 3000);
+                }else{
+                    $("body").html("<h2>You have not logged in</h2>");
+                    window.setTimeout(function () {
+                        window.location.href = "index.html";
+                    }, 3000);
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>

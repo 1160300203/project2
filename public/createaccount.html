@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="createaccount_style.css">
+</head>
+<body>
+<form id="createAccountForm">
+    <p>Username: <input type="text" name="username" id="username" placeholder="Desired Username"></p>
+    <p>Password: <input type="password" name="password" id="password" placeholder="Your Password"></p>
+    <p><input type="button" value="Back" onclick="location.href='index.html'" ></p>
+    <p><input type="submit" value="Sign Up"></p>
+</form>
+<script>
+
+    $("#createAccountForm").submit(function (event) {
+        event.preventDefault();
+        if(validateForm()){
+            $.ajax({
+                url: "/create",
+                data: $("#createAccountForm").serialize(),
+                type: 'POST'
+            }).done(function (response) {
+                if(response.msg === "existed"){
+                    $("body").html("<h1>Account already existed</h1>");
+                    window.setTimeout(function () {
+                        location.href = "createaccount.html";
+                    }, 3000);
+                } else if(response.msg === ""){
+                    $("body").html("<h1>Account created! Welcome</h1>");
+                    window.setTimeout(function () {
+                        location.href = "index.html";
+                    }, 3000);
+                }
+            });
+        }
+    });
+
+    function validateForm(){
+        var usernameElement = document.getElementById("username");
+        var passwordElement = document.getElementById("password");
+        var format = /[ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
+        if(usernameElement.value == "" || passwordElement.value == ""){
+            alert("Please do not leave the fields empty");
+            return false;
+        }else if(usernameElement.value.length < 3){
+            alert("Username must be longer than 3 characters");
+            return false;
+        }else if(format.test(usernameElement.value)){
+            alert("Username can only consist of characters and numbers");
+            return false;
+        }else if(/[a-zA-Z0-9]*[0-9][a-zA-Z0-9]*/.test(passwordElement.value) == false||
+            /[a-zA-Z0-9]*[a-zA-Z][a-zA-Z0-9]*/.test(passwordElement.value)==false ||
+            passwordElement.value.length < 6 || passwordElement.value.length > 15){
+            alert("The length of the password must be between 6 to 15 characters " +
+                "and it must consist of only alphanumerical characters with at least one alphabet and one numerical " +
+                "character");
+            return false;
+        }
+        return true;
+    }
+</script>
+</body>
+</html>
