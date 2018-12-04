@@ -15,7 +15,7 @@ router.post("/verifyLogin", function(req, res, next){
         req.login.findById(username, function (err, result) {
             if(err){
                 return res.send({msg: err});
-            }else if(result.PW === req.body.password){
+            }else if(result != null && result.PW === req.body.password){
                 req.session.username = username;
                 return res.send({msg: ""});
             }else{
@@ -214,10 +214,6 @@ router.post("/comment_submit", function (req, res, next) {
 
 router.get("/history", function (req, res, next) {
     var username = req.session.username;
-
-    console.log("e1");
-    console.log(username);
-
     if(username == null){
         res.send({msg: "invalid"});
     }else{

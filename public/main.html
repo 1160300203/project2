@@ -59,8 +59,13 @@
                         movieslists += "</select><input type='submit' value='Submit'></form><hr>";
                     }
                     $("#movieslist").html(movieslists);
+                }else{
+                    $("body").html("<h1>You have not logged in</h1>");
+                    window.setTimeout(function () {
+                        window.location.href = "index.html";
+                    }, 3000);
                 }
-            })
+            });
         };
 
         $("body").on("click", "#buywelcome", buywelcome_callback);
@@ -77,7 +82,7 @@
                     var house = response.house;
                     var seats = response.seats;
                     var film = response.film;
-                    var ticketInfo = "<h1 id='Ticketing'>Ticketing</h1><table><tr><td>Cinema: </td><td>US</td></tr>" +
+                    var ticketInfo = "<div id='ticketDiv'><h1 id='Ticketing'>Ticketing</h1><table><tr><td>Cinema: </td><td>US</td></tr>" +
                         "<tr><td>House: </td><td>" + broadCast.HouseId + "</td></tr>" +
                         "<tr><td>Film: </td><td>" + film.FilmName + "</td></tr>" +
                         "<tr><td>Category: </td><td>" + film.Category + "</td></tr>" +
@@ -105,77 +110,108 @@
                         "</table>" +
                         "<div><input type='submit' value='Submit'>" +
                         "<input type='button' onclick=\"return buywelcome_callback()\" value='Cancel'></div>" +
-                        "</form></div>";
+                        "</form></div></div>";
                     $("#movieslist").html(ticketInfo);
+                }else{
+                    $("body").html("<h1>You have not logged in</h1>");
+                    window.setTimeout(function () {
+                        window.location.href = "index.html";
+                    }, 3000);
                 }
             });
         });
 
         $("body").on("submit", "#SeatsForm", function () {
             event.preventDefault();
-            var data = $(this).serializeArray();
-            var broadCast = data[0].value, film = data[1].value;
 
-            var seatNo = $("input[name='seatNo[]']:checked").map(function () {
-                return $(this).val();
+            $.ajax({
+                url: "/verifyLogin",
+                type: "POST"
+            }).done((response)=>{
+                if(response.msg === ""){
+                    var data = $(this).serializeArray();
+                    var broadCast = data[0].value, film = data[1].value;
+
+                    var seatNo = $("input[name='seatNo[]']:checked").map(function () {
+                        return $(this).val();
+                    });
+                    $("#Ticketing").text("Cart");
+                    var seatInfo = "<form id='SeatsTypeForm'>"+
+                        "<input type='hidden' name='broadCast' value='" + broadCast + "'>" +
+                        "<input type='hidden' name='film' value='" + film + "'>" +
+                        "<input type='hidden' name='seatNo' value='" + JSON.stringify(seatNo) + "'>";
+                    for(var i=0; i<seatNo.length; i++){
+                        seatInfo += "<p>" + seatNo[i] + "<select name='TicketType[]'>" +
+                            "<option value='Adult' selected='selected'>Adult($75)</option>" +
+                            "<option value='Student/Senior'>Student/Senior($50)</option>" +
+                            "</select></p>";
+                    }
+                    seatInfo += "<div><input type='submit' value='Confirm'>" +
+                        "<input type='button' value='Cancel' onclick=\"return buywelcome_callback()\"></div></form>";
+                    $("#SeatsFormDiv").html(seatInfo);
+                }else{
+                    $("body").html("<h1>You have not logged in</h1>");
+                    window.setTimeout(function () {
+                        window.location.href = "index.html";
+                    }, 3000);
+                }
             });
-            $("#Ticketing").text("Cart");
-            var seatInfo = "<form id='SeatsTypeForm'>"+
-                "<input type='hidden' name='broadCast' value='" + broadCast + "'>" +
-                "<input type='hidden' name='film' value='" + film + "'>" +
-                "<input type='hidden' name='seatNo' value='" + JSON.stringify(seatNo) + "'>";
-            for(var i=0; i<seatNo.length; i++){
-                seatInfo += "<p>" + seatNo[i] + "<select name='TicketType[]'>" +
-                        "<option value='Adult' selected='selected'>Adult($75)</option>" +
-                        "<option value='Student/Senior'>Student/Senior($50)</option>" +
-                        "</select></p>";
-            }
-            seatInfo += "<div><input type='submit' value='Confirm'>" +
-                "<input type='button' value='Cancel' onclick=\"return buywelcome_callback()\"></div></form>";
-            $("#SeatsFormDiv").html(seatInfo);
         });
 
         $("body").on("submit", "#SeatsTypeForm", function (event) {
             event.preventDefault();
-            var data = $(this).serializeArray();
-            var broadCast = JSON.parse(data[0].value);
-            var film = JSON.parse(data[1].value), seatNo = JSON.parse(data[2].value);
-            var ticketType = $("select[name='TicketType[]']").map(function () {
-                return $(this).val();
-            });
-            var orderStr = "<h1>Order information</h1>" +
-                "<form id='orderInfoForm'>" +
-                "<input type='hidden' name='SeatNo' value='" + JSON.stringify(seatNo) + "'>" +
-                "<input type='hidden' name='BroadCastId' value='" + JSON.stringify(broadCast._id)  + "'>" +
-                "<input type='hidden' name='TicketType' value='" + JSON.stringify(ticketType) + "'>" +
-                "<table>";
-            var fee = 0;
-            var ticketsFee = [];
-            for(var i=0; i<seatNo.length; i++){
-                orderStr += "<tr><td>Cinema: </td><td>US Cinema</td></tr>" +
-                    "<tr><td>House: </td><td>" + broadCast.HouseId +"</td></tr>" +
-                    "<tr><td>SeatNo: </td><td>" + seatNo[i] + "</td></tr>" +
-                    "<tr><td>Film: </td><td>" + film.FilmName + "</td></tr>" +
-                    "<tr><td>Category: </td><td>" + film.Category + "</td></tr>" +
-                    "<tr><td>Show Time: </td><td>" + broadCast.Time + "</td></tr>";
-                var ticketFee = "";
-                if(ticketType[i] === "Adult"){
-                    ticketFee = "$75(" + ticketType[i] + ")";
-                    fee += 75;
-                    ticketsFee.push(75);
+
+            $.ajax({
+                url: "/verifyLogin",
+                type: "POST"
+            }).done((response)=>{
+                if(response.msg === ""){
+                    var data = $(this).serializeArray();
+                    var broadCast = JSON.parse(data[0].value);
+                    var film = JSON.parse(data[1].value), seatNo = JSON.parse(data[2].value);
+                    var ticketType = $("select[name='TicketType[]']").map(function () {
+                        return $(this).val();
+                    });
+                    var orderStr = "<div id='orderInfo'><h1>Order information</h1>" +
+                        "<form id='orderInfoForm'>" +
+                        "<input type='hidden' name='SeatNo' value='" + JSON.stringify(seatNo) + "'>" +
+                        "<input type='hidden' name='BroadCastId' value='" + JSON.stringify(broadCast._id)  + "'>" +
+                        "<input type='hidden' name='TicketType' value='" + JSON.stringify(ticketType) + "'>" +
+                        "<table>";
+                    var fee = 0;
+                    var ticketsFee = [];
+                    for(var i=0; i<seatNo.length; i++){
+                        orderStr += "<tr><td>Cinema: </td><td>US Cinema</td></tr>" +
+                            "<tr><td>House: </td><td>" + broadCast.HouseId +"</td></tr>" +
+                            "<tr><td>SeatNo: </td><td>" + seatNo[i] + "</td></tr>" +
+                            "<tr><td>Film: </td><td>" + film.FilmName + "</td></tr>" +
+                            "<tr><td>Category: </td><td>" + film.Category + "</td></tr>" +
+                            "<tr><td>Show Time: </td><td>" + broadCast.Time + "</td></tr>";
+                        var ticketFee = "";
+                        if(ticketType[i] === "Adult"){
+                            ticketFee = "$75(" + ticketType[i] + ")";
+                            fee += 75;
+                            ticketsFee.push(75);
+                        }else{
+                            ticketFee = "$50(" + ticketType[i] + ")";
+                            fee += 50;
+                            ticketsFee.push(50);
+                        }
+                        orderStr += "<tr><td>Ticket Fee: </td><td>" + ticketFee + "</td></tr>";
+                    }
+                    orderStr += "</table>" +
+                        "<p>Total Fee: $ " + fee + "</p>" +
+                        "<hr><input type='hidden' name='TicketsFee' value='" + JSON.stringify(ticketsFee) + "'>" +
+                        "<p id='note'>Please present valid proof of age/status when purchasing Student or Senior tickets before entering the cinema house.</p>" +
+                        "<br><input type='submit' value='OK'><input type='hidden' name='Fee' value="+fee+"></form></div>";
+                    $("#movieslist").html(orderStr);
                 }else{
-                    ticketFee = "$50(" + ticketType[i] + ")";
-                    fee += 50;
-                    ticketsFee.push(50);
+                    $("body").html("<h1>You have not logged in</h1>");
+                    window.setTimeout(function () {
+                        window.location.href = "index.html";
+                    }, 3000);
                 }
-                orderStr += "<tr><td>Ticket Fee: </td><td>" + ticketFee + "</td></tr>";
-            }
-            orderStr += "</table>" +
-                "<p>Total Fee: $ " + fee + "</p>" +
-                "<hr><input type='hidden' name='TicketsFee' value='" + JSON.stringify(ticketsFee) + "'>" +
-                "<p>Please present valid proof of age/status when purchasing Student or Senior tickets before entering the cinema house.</p>" +
-                "<input type='submit' value='OK'><input type='hidden' name='Fee' value="+fee+"></form>";
-            $("#movieslist").html(orderStr);
+            });
         });
 
         $("body").on("submit", "#orderInfoForm", function (event) {
@@ -230,35 +266,37 @@
                 type: "GET"
             }).done((response)=>{
                 if(response.msg === ""){
-                    var commentInfo = "<div>" +
-                        "<span id='buywelcome'> Buy A Ticket </span>" +
-                        "<span id='comment'> Movie Review </span>" +
-                        "<span id='history'> Purchase History </span>" +
-                        "<span id='logout'> Logout </span>" +
+                    var commentInfo = "<div id='nav'>" +
+                        "<span id='buywelcome'> Buy A Ticket </span><div id='last3'>" +
+                        "<span id='logout' class='navlast3'> Logout </span>" +
+                        "<span id='history' class='navlast3'> Purchase History </span>" +
+                        "<span id='comment' class='navlast3'> Movie Review </span></div>" +
                         "</div><div id='movieslist'><form id='FilmNameForm'>" +
-                        "<p>Film Name:<select name='FilmId'>";
+                        "<div id='filmNameSelection'><p>Film Name:<select name='FilmId'>";
                     var filmNames = response.filmNames;
                     var filmIds = response.filmIds;
                     for(var i=0; i<filmNames.length; i++){
                         commentInfo += "<option value='" + filmIds[i] + "'>" +
                             filmNames[i] + "</option>";
                     }
-                    commentInfo += "</select></p>" +
+                    commentInfo += "</select></p></div>" +
                         "<textarea name='Comment' cols='80' rows='20' placeholder='Please input comment here' id='Comment'></textarea>" +
-                        "<br><input type='button' value='View comment' id='ViewComment'>" +
-                        "<input type='submit' value='Submit comment'>" +
+                        "<br><div id='button'><input type='button' value='View comment' id='ViewComment'>" +
+                        "<input type='submit' value='Submit comment'></div>" +
                         "<div id='OthersComments'></div>" +
                         "</form></div>";
                     $("body").html(commentInfo);
+                }else{
+                    $("body").html("<h1>You have not logged in</h1>");
+                    window.setTimeout(function () {
+                        window.location.href = "index.html";
+                    }, 3000);
                 }
             });
         };
         $("body").on("click", "#comment", comment_callback);
 
         $("body").on("click", "#ViewComment", ()=>{
-
-            console.log("e1");
-
             $.ajax({
                 url: "/comment_retrieve",
                 type: "GET",
@@ -274,6 +312,11 @@
                                 "<hr>";
                     }
                     $("#OthersComments").html(othersComments);
+                }else{
+                    $("body").html("<h1>You have not logged in</h1>");
+                    window.setTimeout(function () {
+                        window.location.href = "index.html";
+                    }, 3000);
                 }
             });
         });
@@ -294,6 +337,11 @@
                     if(response.msg === ""){
                         $("body").html("<h1>Your comment has been submitted</h1>");
                         window.setTimeout(comment_callback, 3000);
+                    }else{
+                        $("body").html("<h1>You have not logged in</h1>");
+                        window.setTimeout(function () {
+                            window.location.href = "index.html";
+                        }, 3000);
                     }
                 });
             }
@@ -335,6 +383,11 @@
                             "<hr>";
                     }
                     $("#movieslist").html(historyStr);
+                }else{
+                    $("body").html("<h1>You have not logged in</h1>");
+                    window.setTimeout(function () {
+                        window.location.href = "index.html";
+                    }, 3000);
                 }
             });
         });

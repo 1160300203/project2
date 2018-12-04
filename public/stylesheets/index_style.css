@@ -6,10 +6,10 @@ body{
 
 #div1{
   display:inline-block;
-  position:fixed;
-  left:45%;
-  top:20%;
+  margin-left:45%;
+  margin-top:10%;
   text-align:center;
+  transform: scale(2,1.8);
 }
 
 h1{
@@ -32,4 +32,16 @@ input[type='button']{
   width:200px;
   height:20px;
   background-color:darkkhaki;
+}
+
+
+@media screen and (max-width: 1799px) {
+
+    #div1{
+        display:inline-block;
+        margin-left:41%;
+        margin-top:10%;
+        text-align:center;
+        transform: scale(2,1.8);
+    }
 }

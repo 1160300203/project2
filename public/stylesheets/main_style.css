@@ -7,9 +7,9 @@ body{
 }
 
 #nav{
+    display: inline-block;
+    width: 100%;
     font-size: 300%;
-    margin-left: 5%;
-    margin-right: 5%;
 }
 
 #buywelcome{
@@ -33,14 +33,171 @@ body{
     padding-right: 2%;
 }
 
+.navlast3:hover, #buywelcome:hover{
+    background-color: mediumslateblue;
+}
+
+#movieslist{
+    clear: left;
+    margin-top: 3%;
+}
+
 .filmName{
     display: inline-block;
     clear: left;
-    margin-top: 3%;
+    font-size: 200%;
 }
 
 .synopsis{
     padding-left: 30%;
     padding-right: 30%;
     position: center;
+}
+
+hr{
+    width: 40%;
+}
+
+
+#seat{
+    margin-top:1%;
+}
+
+.seatRow{
+    border:1px solid black;
+    text-align: center;
+}
+
+#screen{
+    text-align: center;
+}
+
+.seatCell{
+    border:1px solid black;
+    text-align:center;
+}
+
+.seatCellSold{
+    text-align: center;
+    border:1px solid black;
+    background-color: orangered;
+    font-size:50%;
+}
+
+tr{
+    border-style:solid;
+}
+
+
+input[type="button"]{
+    position: relative;
+    margin-left: 3%;
+}
+
+table{
+    display: inline-block;
+    text-align: center;
+    border:1px solid black;
+}
+
+#ViewComment{
+    margin-bottom: 2%;
+}
+
+#ticketDiv{
+    display: inline-block;
+    transform: scale(2,2);
+    margin-top: 8%;
+}
+
+#orderInfo{
+    display: inline-block;
+    transform: scale(2,2);
+    margin-top: 8%;
+}
+
+#note{
+    display: inline-block;
+    width: 40%;
+    text-align: center;
+}
+
+#filmNameSelection{
+    transform: scale(2,2);
+    margin-bottom: 2%;
+    margin-top: 2%;
+}
+
+#button{
+    display: inline-block;
+    transform: scale(2,2);
+    margin-top: 2%;
+    margin-bottom: 2%;
+}
+
+@media screen and (max-width: 1799px) {
+
+    body{
+        background:url("../images/background1.jpeg") top center no-repeat;
+        background-size:cover;
+        font-weight: 500;
+        text-align: center;
+    }
+
+    #nav{
+        display: inline-block;
+        width: 100%;
+        font-size: 200%;
+    }
+
+    #buywelcome{
+        float: left;
+        padding-left: 1.5%;
+        padding-right: 1.5%;
+        background-color: inherit;
+    }
+
+    #last3{
+        float: right;
+        color: inherit;
+        width: 70%;
+    }
+
+    .navlast3 {
+        float: right;
+        display: inline-block;
+        margin-left: 2%;
+        padding-left: 2%;
+        padding-right: 2%;
+    }
+
+    .synopsis{
+        padding-left: 10%;
+        padding-right: 10%;
+        position: center;
+    }
+
+    .broadCastForms{
+        display: inline-block;
+        transform: scale(3,3);
+    }
+
+    #ticketDiv{
+        display: inline-block;
+        transform: scale(2,2);
+        margin-top: 20%;
+    }
+
+    #orderInfo{
+        display: inline-block;
+        transform: scale(2,2);
+        margin-top: 20%;
+    }
+
+    #note{
+        display: inline-block;
+        width: 40%;
+        text-align: center;
+    }
+
 }

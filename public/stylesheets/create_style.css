@@ -6,8 +6,21 @@ body{
 
 form{
   display:inline-block;
-  position:fixed;
-  left:43%;
-  top:27%;
+  margin-left:36%;
+  margin-top:15%;
   text-align:center;
+  transform: scale(2,2);
+  color: mediumslateblue;
+  padding: 1%;
+  border: 1px solid darkgray;
+}
+
+h1{
+  text-align: center;
+  color: orangered;
+  font-size: 200%;
+}
+
+.text_p{
+
 }
